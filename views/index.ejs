@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/javascripts/encode.js" charset="utf-8"></script>
+    <script src="/javascripts/domParse.js" charset="utf-8"></script>
+    <script type="text/javascript">
+    	var parse = function(str){
+    		//解码，dom parse然后配对校验
+    		var results = '';
+    		//防止转换函数在页面出错，出现页面卡顿或阻塞，我们需要捕捉这个错误
+    		try {
+    			//引用了domParse.js中的HTMLParse方法
+    			//解码（反转义），使用encode.js提供的he对象的方法unescape
+    			//对数据反转义后，再进行DOMParse
+    			HTMLParser(he.unescape(str,{strict: true}),{
+
+    				//tag标签,attrs属性,unary单标签(比如img标签)还是配对标签
+    				start: function(tag,attrs,unary){
+
+    					//实行过滤操作
+    					if(tag == 'script' || tag == 'style' || tag == 'link' || tag == 'frame' || tag == 'iframe' || tag == 'img') return;
+
+    					results += '<'+tag;
+    					
+    					//添加属性这部分也要过滤
+    					/*for(var i=0,len = attrs.length;i < len;i++) {
+    						results += " "+attrs[i].name + '="' + attrs[i].escaped + '"';
+    					}*/
+
+    					results += (unary?"/":"")+">";
+    				},
+    				end: function(tag){
+    					results += "</" + tag + ">";
+    				},
+    				chars: function(text){
+    					results += text;
+    				},
+    				comment: function(text){
+    					results += "<!--" + text + "-->";
+    				}
+    			});
+    			return results;
+    		} catch(e) {
+    			console.log(e);
+    		} finally {
+
+    		}
+    	}
+    </script>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+
+		<textarea name="name" rows="8" cols="80" id="txt">
+			<p>sks <img src="null" alt="" onerror="alert(1)"></p>
+		</textarea>
+
+		<button type="button" name="button" id="btn">评论</button>
+		<button type="button" name="button" id="get">获取评论</button>
+
+		<script>
+			//文本由服务器端转义，客户端反转义，再DomParse，再过滤
+			
+			//评论发往服务端，再由服务端拉取返回数据
+			var btn = document.getElementById("btn");
+			var get = document.getElementById("get");
+			var txt = document.getElementById("txt");
+
+			//提交comment
+			btn.addEventListener('click',function(){
+				var xhr = new XMLHttpRequest();
+				var url = '/comment?comment='+txt.value;
+				xhr.open('GET',url,true);
+				xhr.onreadystatechange = function() {
+					if(xhr.readyState == 4) {
+						if(xhr.status == 200){
+							console.log(xhr);
+						}else{
+							console.log('error');
+						}
+					}
+				}
+				xhr.send();
+			});
+
+			//返回comment
+			get.addEventListener('click',function() {
+				var xhr = new XMLHttpRequest();
+				var url = '/getComment';
+				xhr.open('GET',url,true);
+				xhr.onreadystatechange = function() {
+					if(xhr.readyState == 4){
+						if(xhr.status == 200){
+							//解码和校验
+							//解析服务端的响应内容（JSON字符串）
+							var com = parse(JSON.parse(xhr.response).comment);
+							var txt = document.createElement('span');
+							txt.innerHTML = com;
+							document.body.appendChild(txt);
+						}else{
+							console.log("error");
+						}
+					}
+				}
+				xhr.send();
+			});
+		</script>
+
+  </body>
+</html>
+
