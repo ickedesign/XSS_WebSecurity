@@ -1,6 +1,6 @@
 # Web安全-XSS的攻击和防范
 
-点击可查看[笔记内容](http://icke.site/2017/06/11/20170611-XSS-WebSecurity/)
+点击可查看[笔记内容](https://ickedesign.github.io/2017/06/11/20170611-XSS-WebSecurity/)
 
 1.通过构建Node服务和建立一个评论功能，使用ajax实例演示XSS的攻击和预防。
 
